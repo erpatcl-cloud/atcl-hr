@@ -1,0 +1,11 @@
+services:
+  atcl-hr-web:
+    container_name: atcl-hr-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5273:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

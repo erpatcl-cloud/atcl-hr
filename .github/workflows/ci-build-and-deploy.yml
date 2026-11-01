@@ -1,4 +1,4 @@
-name: ATCL HRMS — CI Build, Tax Engine Check & Deploy
+name: ATCL HRMS — CI Build, Tax Engine, Docker Container & Deploy
 
 on:
   push:
@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
   pages: write
   id-token: write
 
@@ -23,7 +24,7 @@ concurrency:
 
 jobs:
   build-and-verify:
-    name: Build & Verify ATCL HRMS
+    name: Build, Verify Tax Engine & Docker Container
     runs-on: ubuntu-latest
 
     steps:
@@ -61,10 +62,18 @@ jobs:
       - name: Build Production Bundle (Vite)
         run: npm run build
 
+      - name: Build & Smoke-Test Docker Container on Port 5273
+        run: |
+          docker build -t atcl-hr-web:latest .
+          docker run -d --name atcl-hr-test -p 5273:80 atcl-hr-web:latest
+          sleep 3
+          curl -fsS http://localhost:5273/ | grep -q "ATCL Enterprise HRMS"
+          echo "✓ Docker container is active and serving ATCL Enterprise HRMS on port 5273."
+          docker stop atcl-hr-test
+
       - name: Upload Production Dist Artifact
         uses: actions/upload-artifact@v4
         with:
           name: atcl-hr-production-dist
           path: dist/
           retention-days: 14
-
