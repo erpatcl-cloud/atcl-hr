@@ -1,0 +1,70 @@
+name: ATCL HRMS — CI Build, Tax Engine Check & Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "atcl-hr-ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    name: Build & Verify ATCL HRMS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify Bangladesh Income Tax Act 2023 & Finance Act 2026 Engine
+        run: |
+          node --input-type=module -e "
+            import { calculateBangladeshTax, simulateProgressiveSlabTax } from './src/utils/taxCalculator.js';
+            const sim = simulateProgressiveSlabTax({ taxableIncome: 1200000 });
+            if (sim.grossTax !== 110000) throw new Error('Expected 110000 for 12L taxable income, got ' + sim.grossTax);
+            const r = calculateBangladeshTax({
+              basicSalary: 900000,
+              allowances: 900000,
+              gender: 'male',
+              age: 35,
+              investmentDetails: { dpsContribution: 180000, sanchaypatra: 800000 }
+            });
+            if (r.rebate !== 39000 || r.netTax !== 91000) {
+              throw new Error('Unexpected 3-Limit Rebate or Net Tax calculation');
+            }
+            console.log('✓ Statutory Tax & 3-Limit Rebate Engine verified successfully.');
+          "
+
+      - name: Build Production Bundle (Vite)
+        run: npm run build
+
+      - name: Upload Production Dist Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: atcl-hr-production-dist
+          path: dist/
+          retention-days: 14
+

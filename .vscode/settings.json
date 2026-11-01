@@ -1,0 +1,45 @@
+{
+  "github-enterprise.uris": [],
+  "githubPullRequests.remotes": [
+    "origin",
+    "upstream"
+  ],
+  "githubPullRequests.queries": [
+    {
+      "label": "Waiting For My Review",
+      "query": "is:open review-requested:${user}"
+    },
+    {
+      "label": "Assigned To Me",
+      "query": "is:open assignee:${user}"
+    },
+    {
+      "label": "Created By Me",
+      "query": "is:open author:${user}"
+    },
+    {
+      "label": "Mentioned Me",
+      "query": "is:open mentions:${user}"
+    }
+  ],
+  "githubIssues.queries": [
+    {
+      "label": "My Issues",
+      "query": "default"
+    },
+    {
+      "label": "Created Issues",
+      "query": "author:${user} state:open repo:${owner}/${repository} sort:created-desc"
+    },
+    {
+      "label": "Mentioned Issues",
+      "query": "mentions:${user} state:open repo:${owner}/${repository} sort:updated-desc"
+    }
+  ],
+  "github-actions.workflows.pinned.workflows": [
+    ".github/workflows/ci-build-and-deploy.yml"
+  ],
+  "github-actions.workflows.pinned.refresh.enabled": true,
+  "github-actions.workflows.pinned.refresh.interval": 60
+}
+
